@@ -14,6 +14,7 @@ import edu.upenn.cis.stormlite.distributed.WorkerHelper;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Tuple;
+import edu.upenn.cis.stormlite.tuple.Values;
 import edu.upenn.cis455.mapreduce.Job;
 
 /**
@@ -99,6 +100,14 @@ public class ReduceBolt implements IRichBolt {
         }
 
         // TODO: determine how many EOS votes needed
+        int spouts = Integer.parseInt(stormConf.get("spoutExecutors"));
+        int mappers = Integer.parseInt(stormConf.get("mapExecutors"));
+        int reducers = Integer.parseInt(stormConf.get("reduceExecutors"));
+        String[] workers = WorkerHelper.getWorkers(stormConf);
+        int workerNum = workers.length;
+        
+        int mapperEOS = spouts + spouts * mappers * (workerNum - 1);
+        neededVotesToComplete = mapperEOS * mappers + mapperEOS * mappers * reducers * (workerNum - 1);
     }
 
     /**
@@ -113,15 +122,23 @@ public class ReduceBolt implements IRichBolt {
     		// Already done!
 		} else if (input.isEndOfStream()) {
 			
-			// TODO: only if at EOS do we trigger the reduce operation and output all state
-
-			sentEof = true;
+			neededVotesToComplete--;
+			log.debug("EndOfStream received in ReduceBolt --> neededVotesToComplete = " + neededVotesToComplete);
+			if(neededVotesToComplete == 0) {
+				for(String key: stateByKey.keySet()) {
+					reduceJob.reduce(key, stateByKey.get(key).iterator(), collector);
+				}
+				
+				sentEof = true;
+				collector.emitEndOfStream();
+			}
     	} else {
     		// TODO: this is a plain ol' hash map, replace it with BerkeleyDB
     		
     		String key = input.getStringByField("key");
 	        String value = input.getStringByField("value");
-	        log.debug(getExecutorId() + " received " + key + " / " + value);
+	        log.info(getExecutorId() + " received " + key + " / " + value);
+	        
 	        
 	        synchronized (stateByKey) {
 		        if (!stateByKey.containsKey(key))
@@ -129,6 +146,7 @@ public class ReduceBolt implements IRichBolt {
 		        else
 		        	log.debug("Adding item to " + key + " / " + stateByKey.get(key).size());
 		        stateByKey.get(key).add(value);
+		        log.debug("ReduceBolt -->>> " + key + " : " + value);
 	        }
     	}        
     }

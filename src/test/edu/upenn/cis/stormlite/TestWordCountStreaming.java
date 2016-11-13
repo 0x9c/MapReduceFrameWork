@@ -1,6 +1,10 @@
 package test.edu.upenn.cis.stormlite;
 
+import java.io.FileInputStream;
+import java.util.Properties;
+
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +45,10 @@ public class TestWordCountStreaming {
     private static final String PRINT_BOLT = "PRINT_BOLT";
     
     public static void main(String[] args) throws Exception {
+    	Properties props = new Properties();
+    	props.load(new FileInputStream("./resources/log4j.properties"));
+    	PropertyConfigurator.configure(props);
+    	
         Config config = new Config();
 
         WordSpout spout = new WordSpout();

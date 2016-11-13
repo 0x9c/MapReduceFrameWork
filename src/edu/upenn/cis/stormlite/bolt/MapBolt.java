@@ -11,6 +11,7 @@ import edu.upenn.cis.stormlite.distributed.WorkerHelper;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
 import edu.upenn.cis.stormlite.tuple.Fields;
 import edu.upenn.cis.stormlite.tuple.Tuple;
+import edu.upenn.cis.stormlite.tuple.Values;
 import edu.upenn.cis455.mapreduce.Job;
 
 /**
@@ -93,6 +94,12 @@ public class MapBolt implements IRichBolt {
         }
         
         // TODO: determine how many end-of-stream requests are needed
+        int spouts = Integer.parseInt(stormConf.get("spoutExecutors"));
+        int mappers = Integer.parseInt(stormConf.get("mapExecutors"));
+        String[] workers = WorkerHelper.getWorkers(stormConf);
+        int workerNum = workers.length;
+        
+        neededVotesToComplete = spouts + spouts * mappers * (workerNum - 1);
     }
 
     /**
@@ -104,15 +111,20 @@ public class MapBolt implements IRichBolt {
     	if (!input.isEndOfStream()) {
 	        String key = input.getStringByField("key");
 	        String value = input.getStringByField("value");
-	        log.debug(getExecutorId() + " received " + key + " / " + value);
+	        log.info(getExecutorId() + " received " + key + " / " + value);
+	        
 	        
 	        if (neededVotesToComplete == 0)
 	        	throw new RuntimeException("We received data after we thought the stream had ended!");
 	        
 	        // TODO:  call the mapper, and do bookkeeping to track work done
+	        mapJob.map(key, value, collector);
+	        
     	} else if (input.isEndOfStream()) {
     		// TODO: determine what to do with EOS
-
+    		neededVotesToComplete--;
+    		log.debug(executorId + "-----> EOS Sent From MapBolt" + " neededVotesToComplete = " + neededVotesToComplete);
+    		collector.emitEndOfStream();
     	}
     }
 

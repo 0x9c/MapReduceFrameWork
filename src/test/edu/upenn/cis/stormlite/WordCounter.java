@@ -93,6 +93,7 @@ public class WordCounter implements IRichBolt {
         }
 
         wordCounter.put(word, count);
+        log.info(word + " count : " + count);
         collector.emit(new Values<Object>(word, String.valueOf(count)));
     }
 

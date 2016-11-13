@@ -111,23 +111,26 @@ public class WordSpout implements IRichSpout {
 	    	try {
 		    	String line = reader.readLine();
 		    	if (line != null) {
-		        	log.debug(getExecutorId() + " read from file " + line);
+		    		log.debug(getExecutorId() + " read from file " + line);
 		    		String[] words = line.split("[ \\t\\,.]");
 		
 		    		for (String word: words) {
-		            	log.debug(getExecutorId() + " emitting " + word);
+		            	log.info("----------->" + getExecutorId() + " emitting " + word);
 		    	        this.collector.emit(new Values<Object>(word));
 		    		}
 		    	} else {
 		    		int pos = r.nextInt(words.length);
 		    		String word = words[pos];
-	            	log.debug(getExecutorId() + " emitting " + word);
+	            	log.info(getExecutorId() + " emitting " + word);
 	    	        this.collector.emit(new Values<Object>(word));
 		    	}
 	    	} catch (IOException e) {
 	    		e.printStackTrace();
 	    	}
+    	} else {
+    		this.collector.emitEndOfStream();
     	}
+    	
         Thread.yield();
     }
 

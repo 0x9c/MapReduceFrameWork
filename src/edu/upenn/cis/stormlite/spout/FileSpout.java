@@ -129,7 +129,7 @@ public abstract class FileSpout implements IRichSpout {
 		    	        this.collector.emit(new Values<Object>(String.valueOf(inx++), word));
 		    		}
 		    	} else if (!sentEof) {
-		        	log.info(getExecutorId() + " finished file " + getFilename() + " and emitting EOS");
+		        	log.debug(getExecutorId() + " finished file " + getFilename() + " and emitting EOS");
 	    	        this.collector.emitEndOfStream();
 	    	        sentEof = true;
 		    	}

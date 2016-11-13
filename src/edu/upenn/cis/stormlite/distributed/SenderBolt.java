@@ -1,5 +1,6 @@
 package edu.upenn.cis.stormlite.distributed;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -102,7 +103,13 @@ public class SenderBolt implements IRichBolt {
 		String jsonForTuple = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tuple);
 		
 		// TODO: send this to /pushdata/{stream} as a POST!
-		
+		conn.setDoOutput( true );
+		conn.setRequestMethod("POST");
+		OutputStream wr = conn.getOutputStream();
+		wr.write(jsonForTuple.getBytes());
+		wr.flush();
+		conn.getResponseCode();
+		conn.getResponseMessage();
 		conn.disconnect();
     }
 

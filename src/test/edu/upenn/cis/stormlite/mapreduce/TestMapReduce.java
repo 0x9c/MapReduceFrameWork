@@ -1,13 +1,19 @@
 package test.edu.upenn.cis.stormlite.mapreduce;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Properties;
+
+import org.apache.log4j.BasicConfigurator;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,13 +68,13 @@ public class TestMapReduce {
         config.put("master", "127.0.0.1:8080");
         
         // Class with map function
-        config.put("mapClass", "test.edu.upenn.cis.stormlite.mapreduce.GroupWords");
+        config.put("mapClass", "edu.upenn.cis455.mapreduce.job.WordCount");
         // Class with reduce function
-        config.put("reduceClass", "test.edu.upenn.cis.stormlite.mapreduce.GroupWords");
+        config.put("reduceClass", "edu.upenn.cis455.mapreduce.job.WordCount");
         
         // Numbers of executors (per node)
         config.put("spoutExecutors", "1");
-        config.put("mapExecutors", "1");
+        config.put("mapExecutors", "2");
         config.put("reduceExecutors", "1");
         
     }
@@ -83,8 +89,11 @@ public class TestMapReduce {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
+    	Properties props = new Properties();
+    	props.load(new FileInputStream("./resources/log4j.properties"));
+    	PropertyConfigurator.configure(props);
+    	
         Config config = new Config();
-        
         // Complete list of workers, comma-delimited
         config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
 
@@ -119,7 +128,7 @@ public class TestMapReduce {
 	        builder.setSpout(WORD_SPOUT, spout, Integer.valueOf(config.get("spoutExecutors")));
 	        
 	        // Parallel mappers, each of which gets specific words
-	        builder.setBolt(MAP_BOLT, bolt, Integer.valueOf(config.get("mapExecutors"))).fieldsGrouping(WORD_SPOUT, new Fields("value"));
+	        builder.setBolt(MAP_BOLT, bolt, Integer.valueOf(config.get("mapExecutors"))).fieldsGrouping(WORD_SPOUT, new Fields("key", "value"));
 	        
 	        // Parallel reducers, each of which gets specific words
 	        builder.setBolt(REDUCE_BOLT, bolt2, Integer.valueOf(config.get("reduceExecutors"))).fieldsGrouping(MAP_BOLT, new Fields("key"));

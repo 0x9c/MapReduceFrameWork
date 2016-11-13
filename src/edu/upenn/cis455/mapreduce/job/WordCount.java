@@ -9,16 +9,18 @@ public class WordCount implements Job {
 
   public void map(String key, String value, Context context)
   {
-    // Your map function for WordCount goes here
-
-
+      // Your map function for WordCount goes here
+	  context.write(value, "1");
   }
   
   public void reduce(String key, Iterator<String> values, Context context)
   {
-    // Your reduce function for WordCount goes here
-
-
+      // Your reduce function for WordCount goes here
+	  Integer count = 0;
+	  while(values.hasNext()) {
+		  count += Integer.parseInt(values.next());
+	  }
+	  context.write(key, count.toString());
   }
   
 }
