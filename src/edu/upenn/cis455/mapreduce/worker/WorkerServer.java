@@ -57,6 +57,9 @@ public class WorkerServer {
 				try {
 					workerJob = om.readValue(arg0.body(), WorkerJob.class);
 		        	
+					WorkerStatus.clear();
+					WorkerStatus.setJob(workerJob.getConfig().get("job"));
+					
 		        	try {
 		        		log.info("Processing job definition request" + workerJob.getConfig().get("job") +
 		        				" on machine " + workerJob.getConfig().get("workerIndex"));

@@ -20,36 +20,41 @@ public class WorkerReporter extends Thread{
 	public void run(){
 		while(keepReporting) {
 			String url = "http://"+ master + "/workerstatus";
-			String query = "port=" + port +"&status=" + WorkerStatus.getStatus() +"&job=" + WorkerStatus.getJob() + "&keysread=" + WorkerStatus.getKeysRead() +"&keyswritten=" + WorkerStatus.getKeysWritten() + "&results=" + WorkerStatus.getResult().toString();
+			String query = "port=" + port +"&status=" + WorkerStatus.getStatus() +"&job=" + WorkerStatus.getJob() + "&keysread=" + WorkerStatus.getKeysRead() +"&keyswritten=" + WorkerStatus.getKeysWritten() + "&results=" + resultsSerialization(WorkerStatus.getResult());
 			try {
-				Thread.sleep(10000);
 				
 				URL http_url = new URL(url + "?" + query);
 				
 				System.out.println(http_url);
 				
 				HttpURLConnection urlConnection = (HttpURLConnection)http_url.openConnection();
-//				urlConnection.connect();
 				urlConnection.setRequestMethod("GET");
 				urlConnection.getResponseCode();
 				urlConnection.getResponseMessage();
-		
-			} catch (InterruptedException | IOException e) {
+			} catch (IOException e) {
 				//e.printStackTrace();
 				System.out.println("Worker Port: " + port + " Reporting status failed");
-				continue;
+			}
+			
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	}
 	
 	public String resultsSerialization(List<String> results){
 		StringBuilder sb = new StringBuilder();
+		int count = 0;
 		for(String str : results) {
 			if(sb.length() != 0) sb.append(",");
 			str = str.replaceAll(":", "-");
 			sb.append(str);
+			count++;
+			if(count == 100) break;
 		}
-		return sb.toString();
+		return "[" + sb.toString() + "]";
 	}
 	
 	public void shutdown(){

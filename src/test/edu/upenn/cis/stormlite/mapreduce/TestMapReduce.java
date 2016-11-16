@@ -95,8 +95,8 @@ public class TestMapReduce {
     	
         Config config = new Config();
         // Complete list of workers, comma-delimited
-        //config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
-        config.put("workerList", "[127.0.0.1:8000]");
+        config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
+//        config.put("workerList", "[127.0.0.1:8000]");
         // Build the local worker
         
         config.put("master", "127.0.0.1:8080");

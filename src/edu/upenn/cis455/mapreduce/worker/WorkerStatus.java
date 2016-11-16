@@ -54,7 +54,6 @@ public class WorkerStatus {
 		keysRead = 0;
 		keysWritten = 0;
 		results = new ArrayList<String>();
-		status = "IDLE";
 		job = "NoJob";
 	}
 }

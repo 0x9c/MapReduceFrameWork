@@ -113,9 +113,9 @@ public class MasterServlet extends HttpServlet {
 	  int reduces = Integer.parseInt(request.getParameter("reducenumber"));
 	  
 	  Config config = new Config();
-      //config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
-	  config.put("workerList", "[127.0.0.1:8000]");	
-      config.put("job", "MyJob");                /* Non-use name of something else? */
+      config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
+//	  config.put("workerList", "[127.0.0.1:8000]");	
+      config.put("job", jobClass);             
       config.put("master", "127.0.0.1:8080");
       config.put("mapClass", jobClass);
       config.put("reduceClass", jobClass);
@@ -200,7 +200,7 @@ public class MasterServlet extends HttpServlet {
 		
 		List<String> res = new ArrayList<>();
 		for (String item: pairs){
-			item.replaceAll("-", ":");
+			item = item.replaceAll("-", ":");
 			res.add(item);
 		}	
 		return res;
