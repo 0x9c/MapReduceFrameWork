@@ -95,9 +95,11 @@ public class TestMapReduce {
     	
         Config config = new Config();
         // Complete list of workers, comma-delimited
-        config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
-
+        //config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
+        config.put("workerList", "[127.0.0.1:8000]");
         // Build the local worker
+        
+        config.put("master", "127.0.0.1:8080");
         
         if (args.length >= 1) {
             config.put("workerIndex", args[0]);
@@ -108,92 +110,92 @@ public class TestMapReduce {
 
         // If we're the Master, we need to initiate the computation
         if (args.length > 1) {
-			// Let the server start up
-    		System.out.println("Press [Enter] to launch query, once nodes are alive...");
-    		(new BufferedReader(new InputStreamReader(System.in))).readLine();
+//			// Let the server start up
+//    		System.out.println("Press [Enter] to launch query, once nodes are alive...");
+//    		(new BufferedReader(new InputStreamReader(System.in))).readLine();
+//
+//			
+//			log.info("************ Creating the job request ***************");
 
-			
-			log.info("************ Creating the job request ***************");
-
-			createSampleMapReduce(config);
-			
-	        FileSpout spout = new WordFileSpout();
-	        MapBolt bolt = new MapBolt();
-	        ReduceBolt bolt2 = new ReduceBolt();
-	        PrintBolt printer = new PrintBolt();
-
-	        TopologyBuilder builder = new TopologyBuilder();
-
-	        // Only one source ("spout") for the words
-	        builder.setSpout(WORD_SPOUT, spout, Integer.valueOf(config.get("spoutExecutors")));
-	        
-	        // Parallel mappers, each of which gets specific words
-	        builder.setBolt(MAP_BOLT, bolt, Integer.valueOf(config.get("mapExecutors"))).fieldsGrouping(WORD_SPOUT, new Fields("key", "value"));
-	        
-	        // Parallel reducers, each of which gets specific words
-	        builder.setBolt(REDUCE_BOLT, bolt2, Integer.valueOf(config.get("reduceExecutors"))).fieldsGrouping(MAP_BOLT, new Fields("key"));
-
-	        // Only use the first printer bolt for reducing to a single point
-	        builder.setBolt(PRINT_BOLT, printer, 1).firstGrouping(REDUCE_BOLT);
-	        
-	        Topology topo = builder.createTopology();
-	        
-	        WorkerJob job = new WorkerJob(topo, config);
-			
-	        ObjectMapper mapper = new ObjectMapper();
-	        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-			try {
-				String[] workers = WorkerHelper.getWorkers(config);
-	
-				int i = 0;
-				for (String dest: workers) {
-			        config.put("workerIndex", String.valueOf(i++));
-					if (sendJob(dest, "POST", config, "definejob", 
-							mapper.writerWithDefaultPrettyPrinter().writeValueAsString(job)).getResponseCode() != 
-							HttpURLConnection.HTTP_OK) {
-						throw new RuntimeException("Job definition request failed");
-					}
-				}
-				for (String dest: workers) {
-					if (sendJob(dest, "POST", config, "runjob", "").getResponseCode() != 
-							HttpURLConnection.HTTP_OK) {
-						throw new RuntimeException("Job execution request failed");
-					}
-				}
-			} catch (JsonProcessingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-		        System.exit(0);
-			}        
+//			createSampleMapReduce(config);
+//			
+//	        FileSpout spout = new WordFileSpout();
+//	        MapBolt bolt = new MapBolt();
+//	        ReduceBolt bolt2 = new ReduceBolt();
+//	        PrintBolt printer = new PrintBolt();
+//
+//	        TopologyBuilder builder = new TopologyBuilder();
+//
+//	        // Only one source ("spout") for the words
+//	        builder.setSpout(WORD_SPOUT, spout, Integer.valueOf(config.get("spoutExecutors")));
+//	        
+//	        // Parallel mappers, each of which gets specific words
+//	        builder.setBolt(MAP_BOLT, bolt, Integer.valueOf(config.get("mapExecutors"))).fieldsGrouping(WORD_SPOUT, new Fields("key", "value"));
+//	        
+//	        // Parallel reducers, each of which gets specific words
+//	        builder.setBolt(REDUCE_BOLT, bolt2, Integer.valueOf(config.get("reduceExecutors"))).fieldsGrouping(MAP_BOLT, new Fields("key"));
+//
+//	        // Only use the first printer bolt for reducing to a single point
+//	        builder.setBolt(PRINT_BOLT, printer, 1).firstGrouping(REDUCE_BOLT);
+//	        
+//	        Topology topo = builder.createTopology();
+//	        
+//	        WorkerJob job = new WorkerJob(topo, config);
+//			
+//	        ObjectMapper mapper = new ObjectMapper();
+//	        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+//			try {
+//				String[] workers = WorkerHelper.getWorkers(config);
+//	
+//				int i = 0;
+//				for (String dest: workers) {
+//			        config.put("workerIndex", String.valueOf(i++));
+//					if (sendJob(dest, "POST", config, "definejob", 
+//							mapper.writerWithDefaultPrettyPrinter().writeValueAsString(job)).getResponseCode() != 
+//							HttpURLConnection.HTTP_OK) {
+//						throw new RuntimeException("Job definition request failed");
+//					}
+//				}
+//				for (String dest: workers) {
+//					if (sendJob(dest, "POST", config, "runjob", "").getResponseCode() != 
+//							HttpURLConnection.HTTP_OK) {
+//						throw new RuntimeException("Job execution request failed");
+//					}
+//				}
+//			} catch (JsonProcessingException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//		        System.exit(0);
+//			}        
         }
         
-		System.out.println("Press [Enter] to exit...");
-		(new BufferedReader(new InputStreamReader(System.in))).readLine();
+		//System.out.println("Press [Enter] to exit...");
+		//(new BufferedReader(new InputStreamReader(System.in))).readLine();
 
-		WorkerServer.shutdown();
-        System.exit(0);
+		//WorkerServer.shutdown();
+        //System.exit(0);
 		
     }
     
-    static HttpURLConnection sendJob(String dest, String reqType, Config config, String job, String parameters) throws IOException {
-		URL url = new URL(dest + "/" + job);
-		
-		log.info("Sending request to " + url.toString());
-		
-		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-		conn.setDoOutput(true);
-		conn.setRequestMethod(reqType);
-		
-		if (reqType.equals("POST")) {
-			conn.setRequestProperty("Content-Type", "application/json");
-			
-			OutputStream os = conn.getOutputStream();
-			byte[] toSend = parameters.getBytes();
-			os.write(toSend);
-			os.flush();
-		} else
-			conn.getOutputStream();
-		
-		return conn;
-    }
+//    static HttpURLConnection sendJob(String dest, String reqType, Config config, String job, String parameters) throws IOException {
+//		URL url = new URL(dest + "/" + job);
+//		
+//		log.info("Sending request to " + url.toString());
+//		
+//		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+//		conn.setDoOutput(true);
+//		conn.setRequestMethod(reqType);
+//		
+//		if (reqType.equals("POST")) {
+//			conn.setRequestProperty("Content-Type", "application/json");
+//			
+//			OutputStream os = conn.getOutputStream();
+//			byte[] toSend = parameters.getBytes();
+//			os.write(toSend);
+//			os.flush();
+//		} else
+//			conn.getOutputStream();
+//		
+//		return conn;
+//    }
 }

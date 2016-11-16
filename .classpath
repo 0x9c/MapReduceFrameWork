@@ -9,16 +9,12 @@
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/jackson-databind-2.9.0-20161012.002007-91.jar"/>
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/javax.annotation-api-1.2.jar"/>
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/je-6.2.31.jar"/>
-	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/jetty-http-9.3.13.v20161014.jar"/>
-	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/jetty-io-9.3.13.v20161014.jar"/>
-	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/jetty-server-9.3.13.v20161014.jar"/>
-	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/jetty-util-9.3.13.v20161014.jar"/>
-	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/jetty-webapp-9.3.13.v20161014.jar"/>
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/jtidy-r938.jar"/>
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/junit-4.12.jar"/>
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/log4j-1.2.17.jar"/>
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/slf4j-api-1.7.21.jar"/>
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/slf4j-log4j12-1.7.21.jar"/>
 	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/spark-core-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/Users/dongtianxiang/git/MapReduceFrameWork/lib/jetty-all-9.2.9.v20150224.jar"/>
 	<classpathentry kind="output" path="classes/"/>
 </classpath>

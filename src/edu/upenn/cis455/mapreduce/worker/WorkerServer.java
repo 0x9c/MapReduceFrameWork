@@ -150,6 +150,10 @@ public class WorkerServer {
 				url = new URL(myAddress);
 
 				new WorkerServer(url.getPort());
+				
+				WorkerReporter workerReporter = new WorkerReporter(config.get("master"), url.getPort());
+				workerReporter.start();
+				
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
