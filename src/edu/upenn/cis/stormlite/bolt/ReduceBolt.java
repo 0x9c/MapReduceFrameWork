@@ -1,5 +1,6 @@
 package edu.upenn.cis.stormlite.bolt;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,8 +60,10 @@ public class ReduceBolt implements IRichBolt {
 	/**
 	 * Buffer for state, by key
 	 */
-	Map<String, List<String>> stateByKey = new HashMap<>();
-
+	//Map<String, List<String>> stateByKey = new HashMap<>();
+	
+	DBWrapper db;
+	
 	/**
      * This is where we send our output stream
      */
@@ -98,7 +101,22 @@ public class ReduceBolt implements IRichBolt {
         if (!stormConf.containsKey("mapExecutors")) {
         	throw new RuntimeException("Reducer class doesn't know how many map bolt executors");
         }
-
+        
+        String basePath = System.getProperty("user.home") + "/store/";
+        String executorFile = "worker" + stormConf.get("workerIndex") + "_executor" + executorId;
+        File storeFile = new File(basePath + executorFile);
+        if(storeFile.exists()) {
+        	// if previous one exists, delete it.
+        	File[] files = storeFile.listFiles();
+        	for(File f : files) {
+        		if(f.isFile()) {
+        			f.delete();
+        		}
+        	}
+        }
+        System.out.println("------------> " + "getting DB instance");
+        db = new DBWrapper(basePath + executorFile);
+        
         // TODO: determine how many EOS votes needed
         int spouts = Integer.parseInt(stormConf.get("spoutExecutors"));
         int mappers = Integer.parseInt(stormConf.get("mapExecutors"));
@@ -106,7 +124,7 @@ public class ReduceBolt implements IRichBolt {
         String[] workers = WorkerHelper.getWorkers(stormConf);
         int workerNum = workers.length;
         
-        int mapperEOS = spouts + spouts * mappers * (workerNum - 1);
+        int mapperEOS = 1;
         neededVotesToComplete = mapperEOS * mappers + mapperEOS * mappers * reducers * (workerNum - 1);
     }
 
@@ -125,12 +143,15 @@ public class ReduceBolt implements IRichBolt {
 			neededVotesToComplete--;
 			log.debug("EndOfStream received in ReduceBolt --> neededVotesToComplete = " + neededVotesToComplete);
 			if(neededVotesToComplete == 0) {
-				for(String key: stateByKey.keySet()) {
-					reduceJob.reduce(key, stateByKey.get(key).iterator(), collector);
+				for(String key: db.getKeySet()) {
+					reduceJob.reduce(key, db.getListByKey(key).iterator(), collector);
 				}
-				
+//				for(String key: stateByKey.keySet()) {
+//					reduceJob.reduce(key,stateByKey.get(key).iterator(), collector);
+//				}
 				sentEof = true;
 				collector.emitEndOfStream();
+				db.close();
 			}
     	} else {
     		// TODO: this is a plain ol' hash map, replace it with BerkeleyDB
@@ -140,14 +161,17 @@ public class ReduceBolt implements IRichBolt {
 	        log.info(getExecutorId() + " received " + key + " / " + value);
 	        
 	        
-	        synchronized (stateByKey) {
-		        if (!stateByKey.containsKey(key))
-		        	stateByKey.put(key, new ArrayList<>());
-		        else
-		        	log.debug("Adding item to " + key + " / " + stateByKey.get(key).size());
-		        stateByKey.get(key).add(value);
+//	        synchronized (stateByKey) {
+//		        if (!stateByKey.containsKey(key))
+//		        	stateByKey.put(key, new ArrayList<>());
+//		        else
+//		        	log.debug("Adding item to " + key + " / " + stateByKey.get(key).size());
+//		        stateByKey.get(key).add(value);
+	        	
+	        	db.addValueToList(key, value);
+	        	
 		        log.debug("ReduceBolt -->>> " + key + " : " + value);
-	        }
+//	        }
     	}        
     }
 

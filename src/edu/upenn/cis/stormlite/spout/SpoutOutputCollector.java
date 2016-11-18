@@ -39,6 +39,7 @@ public class SpoutOutputCollector implements IOutputCollector  {
 	
 	@Override
 	public void setRouter(StreamRouter router) {
+		System.err.println("set here again again:"+router);
 		this.router = router;
 	}
 
@@ -47,6 +48,8 @@ public class SpoutOutputCollector implements IOutputCollector  {
 	 * @param tuple
 	 */
 	public void emit(List<Object> tuple) {
+//		System.err.println(router);
+		
 		router.execute(tuple, context);
 	}
 

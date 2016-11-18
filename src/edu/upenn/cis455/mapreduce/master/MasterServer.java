@@ -11,6 +11,11 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.webapp.WebAppContext;
 
+/**
+ * Main class to start master server using Embeded jetty
+ * @author dongtianxiang
+ *
+ */
 public class MasterServer {
 	
 	public static void main(String[] args) throws Exception{

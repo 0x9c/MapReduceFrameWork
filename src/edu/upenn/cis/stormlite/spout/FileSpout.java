@@ -61,12 +61,12 @@ public abstract class FileSpout implements IRichSpout {
 	String filename;
     BufferedReader reader;
 	Random r = new Random();
-	
+	protected Map<String, String> config;
 	int inx = 0;
 	boolean sentEof = false;
 	
     public FileSpout() {
-    	filename = getFilename();
+    	filename = "";
     }
     
     public abstract String getFilename();
@@ -80,7 +80,8 @@ public abstract class FileSpout implements IRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
-        
+        this.config = conf;
+        this.filename = getFilename();
         try {
         	log.debug("Starting spout for " + filename);
         	log.debug(getExecutorId() + " opening file reader");
@@ -121,11 +122,20 @@ public abstract class FileSpout implements IRichSpout {
 	    	try {
 		    	String line = reader.readLine();
 		    	if (line != null) {
-		        	log.debug(getExecutorId() + " read from file " + getFilename() + ": " + line);
+		        	log.info(getExecutorId() + " read from file " + getFilename() + ": " + line);
 		    		String[] words = line.split("[ \\t\\,.]");
 		
 		    		for (String word: words) {
-		            	log.debug(getExecutorId() + " emitting " + word);
+		            	log.info(getExecutorId() + " emitting " + word);
+		            	log.info("empty? "+collector.router);
+		            	while(collector.router == null) {
+		            		try {
+								Thread.sleep(500);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+		            	}
 		    	        this.collector.emit(new Values<Object>(String.valueOf(inx++), word));
 		    		}
 		    	} else if (!sentEof) {
@@ -155,6 +165,7 @@ public abstract class FileSpout implements IRichSpout {
 
 	@Override
 	public void setRouter(StreamRouter router) {
+		System.err.println("set here in spout:"+router);
 		this.collector.setRouter(router);
 	}
 

@@ -32,6 +32,7 @@ public class MasterServlet extends HttpServlet {
 
   static final long serialVersionUID = 455555001;
   static Map<String, WorkerInfo> workerSet = new HashMap<>();
+private Config config;
   
   
   public void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -102,6 +103,30 @@ public class MasterServlet extends HttpServlet {
 				out.println("<input type=\"submit\" value=\"Submit\">");
 				out.println("</body></html>");
 	    }
+	    
+	    if (url.endsWith("/shutdown")) {
+//	    	shutdown();
+	    	PrintWriter out = response.getWriter();
+	    	out.println("<html>");
+	    	out.println("<body>");
+	    	out.println("The master server has been shut down");
+	    	out.println("</body>");
+	    	out.println("</html>");
+	    	out.close();
+	    	Config config = new Config();
+	    	config.put("workerList", "[127.0.0.1:8000,127.0.0.1:8001]");
+	    	String[] workers = WorkerHelper.getWorkers(config);
+	    	int i = 0;
+			for (String dest: workers) {
+			    config.put("workerIndex", String.valueOf(i++));
+			    try{
+			    	sendJob(dest, "GET", config, "shutdown", "");
+			    } catch(Exception e) {
+			    	
+			    }
+			}
+			System.exit(0);
+	    }
 	   
   }
   
@@ -122,50 +147,55 @@ public class MasterServlet extends HttpServlet {
       config.put("spoutExecutors", "1");
       config.put("mapExecutors", maps + "");
       config.put("reduceExecutors", reduces + "");
-      
+      config.put("inputDir", inputDir);
+      config.put("outputDir", outputDir);
+      this.config = config;
       String[] workers = WorkerHelper.getWorkers(config);
-      int i = 0;
-      for (String dest: workers) {
-  	    	config.put("workerIndex", String.valueOf(i++));
-  	        
-    	    WorkerInfo w = workerSet.get(dest);
+
 //    	    if(w == null || !isActive(w)) continue;     /* What if the worker is offline??? */
     	  
-    	    FileSpout spout = new WordFileSpout();
-	  		MapBolt bolt = new MapBolt();
-	  		ReduceBolt bolt2 = new ReduceBolt();
-	  		PrintBolt printer = new PrintBolt();
-	  		
-	  		TopologyBuilder builder = new TopologyBuilder();
-	  		
-	  		builder.setSpout("WORD_SPOUT", spout, Integer.valueOf(config.get("spoutExecutors")));
-	  		builder.setBolt("MAP_BOLT", bolt, Integer.valueOf(config.get("mapExecutors"))).fieldsGrouping("WORD_SPOUT", new Fields("key", "value"));
-	  		builder.setBolt("REDUCE_BOLT", bolt2, Integer.valueOf(config.get("reduceExecutors"))).fieldsGrouping("MAP_BOLT", new Fields("key"));
-	  		builder.setBolt("PRINT_BOLT", printer, 1).firstGrouping("REDUCE_BOLT");
-	  		
-	  		Topology topo = builder.createTopology();
-	  		
-	  		WorkerJob job = new WorkerJob(topo, config);
-	  		
-	  		ObjectMapper mapper = new ObjectMapper();
-	  		mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-	  		try {
-	  			if (sendJob(dest, "POST", config, "definejob", 
-	  					mapper.writerWithDefaultPrettyPrinter().writeValueAsString(job)).getResponseCode() != 
-	  					HttpURLConnection.HTTP_OK) {
-	  				throw new RuntimeException("Job definition request failed");
-	  			}
-	  			if (sendJob(dest, "POST", config, "runjob", "").getResponseCode() != 
-	  					HttpURLConnection.HTTP_OK) {
-	  				throw new RuntimeException("Job execution request failed");
-	  				}
-	  		
-	  		} catch (IOException e) {
-	  			// TODO Auto-generated catch block
-	  			e.printStackTrace();
-	  		    System.exit(0);
-	  		}        
-      }
+		FileSpout spout = new WordFileSpout();
+		MapBolt bolt = new MapBolt();
+		ReduceBolt bolt2 = new ReduceBolt();
+		PrintBolt printer = new PrintBolt();
+		
+		TopologyBuilder builder = new TopologyBuilder();
+		
+		builder.setSpout("WORD_SPOUT", spout, Integer.valueOf(config.get("spoutExecutors")));
+		builder.setBolt("MAP_BOLT", bolt, Integer.valueOf(config.get("mapExecutors"))).fieldsGrouping("WORD_SPOUT", new Fields("key", "value"));
+		builder.setBolt("REDUCE_BOLT", bolt2, Integer.valueOf(config.get("reduceExecutors"))).fieldsGrouping("MAP_BOLT", new Fields("key"));
+		builder.setBolt("PRINT_BOLT", printer, 1).firstGrouping("REDUCE_BOLT");
+		
+		Topology topo = builder.createTopology();
+		
+		WorkerJob job = new WorkerJob(topo, config);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+		try {
+		  int i = 0;
+		  for (String dest: workers) {
+		    config.put("workerIndex", String.valueOf(i++));
+			if (sendJob(dest, "POST", config, "definejob", 
+					mapper.writerWithDefaultPrettyPrinter().writeValueAsString(job)).getResponseCode() != 
+					HttpURLConnection.HTTP_OK) {
+				throw new RuntimeException("Job definition request failed");
+			}
+		  }
+	
+		  i = 0;
+		  for (String dest: workers) {
+		    config.put("workerIndex", String.valueOf(i++));
+			if (sendJob(dest, "POST", config, "runjob", "").getResponseCode() != 
+					HttpURLConnection.HTTP_OK) {
+				throw new RuntimeException("Job execution request failed");
+				}
+		  }
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		    System.exit(0);
+		}        
       response.sendRedirect("status");
   }
   
@@ -183,8 +213,14 @@ public class MasterServlet extends HttpServlet {
 			byte[] toSend = parameters.getBytes();
 			os.write(toSend);
 			os.flush();
-		} else
-			conn.getOutputStream();
+		} else {
+			System.err.println("##############url:"+url);
+			//conn.setDoOutput(true);
+			//conn.getOutputStream();
+			System.err.println(conn.getResponseCode());
+			System.err.println(conn.getResponseMessage());
+			//conn.disconnect();
+		}
 		
 		return conn;
   }
@@ -224,6 +260,10 @@ public class MasterServlet extends HttpServlet {
 	  Date date = Calendar.getInstance().getTime();
 	  long current = date.getTime();
 	  return current - worker.getLastReport() < 30000;
+  }
+  
+  public void shutdown() {
+	  
   }
 }
   

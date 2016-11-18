@@ -3,6 +3,11 @@ package edu.upenn.cis455.mapreduce.worker;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class to store all information about worker's status
+ * @author dongtianxiang
+ *
+ */
 public class WorkerStatus {
 	private static int keysRead = 0;
 	private static int keysWritten = 0;

@@ -124,7 +124,9 @@ public class MapBolt implements IRichBolt {
     		// TODO: determine what to do with EOS
     		neededVotesToComplete--;
     		log.debug(executorId + "-----> EOS Sent From MapBolt" + " neededVotesToComplete = " + neededVotesToComplete);
-    		collector.emitEndOfStream();
+    		if(neededVotesToComplete == 0)  {
+    			collector.emitEndOfStream();
+    		}
     	}
     }
 

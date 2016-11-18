@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.upenn.cis.stormlite.DistributedCluster;
 import edu.upenn.cis.stormlite.TopologyContext;
+import edu.upenn.cis.stormlite.bolt.BoltDeclarer;
 import edu.upenn.cis.stormlite.distributed.WorkerHelper;
 import edu.upenn.cis.stormlite.distributed.WorkerJob;
 import edu.upenn.cis.stormlite.routers.StreamRouter;
@@ -63,6 +64,10 @@ public class WorkerServer {
 		        	try {
 		        		log.info("Processing job definition request" + workerJob.getConfig().get("job") +
 		        				" on machine " + workerJob.getConfig().get("workerIndex"));
+		        		for (String stream: workerJob.getTopology().getBolts().keySet()) {
+		        			BoltDeclarer decl = workerJob.getTopology().getBoltDeclarer(stream);
+		        			log.info("topology:"+decl.getRouter());
+		        		}
 						contexts.add(cluster.submitTopology(workerJob.getConfig().get("job"), workerJob.getConfig(), 
 								workerJob.getTopology()));
 						
@@ -133,6 +138,15 @@ public class WorkerServer {
 			}
         	
         });
+        
+        Spark.get(new Route("/shutdown") {
+        	@Override
+        	public Object handle(Request arg0, Response arg1) {
+        		log.info("worker shutdown received");
+        		WorkerServer.shutdown();
+        		return "ShutDown";
+        	}
+        });
 
 	}
 	
@@ -171,5 +185,6 @@ public class WorkerServer {
 		}
 		
     	cluster.shutdown();
+    	System.exit(0);
 	}
 }

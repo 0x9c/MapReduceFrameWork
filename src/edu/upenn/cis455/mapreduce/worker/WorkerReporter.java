@@ -6,6 +6,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+/**
+ * Separate thread to report worker status in workerServer, via HTTP socket
+ * @author dongtianxiang
+ *
+ */
 public class WorkerReporter extends Thread{
 	int port;
 	String master;
@@ -16,6 +21,9 @@ public class WorkerReporter extends Thread{
 		this.port = port;
 	}
 	
+	/**
+	 * Main method to run the thread 
+	 */
 	@Override
 	public void run(){
 		while(keepReporting) {
@@ -44,6 +52,11 @@ public class WorkerReporter extends Thread{
 		}
 	}
 	
+	/**
+	 * Method to serialize results to make query valid
+	 * @param results
+	 * @return
+	 */
 	public String resultsSerialization(List<String> results){
 		StringBuilder sb = new StringBuilder();
 		int count = 0;

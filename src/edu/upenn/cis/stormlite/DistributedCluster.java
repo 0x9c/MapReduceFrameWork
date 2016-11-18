@@ -190,7 +190,7 @@ public class DistributedCluster implements Runnable {
 			BoltDeclarer decl = topo.getBoltDeclarer(stream);
 			
 			StreamRouter router = decl.getRouter();
-			
+			System.err.println("##################"+router);
 			streams.put(stream, router);
 			
 			int count = boltStreams.get(stream).size();
@@ -225,6 +225,7 @@ public class DistributedCluster implements Runnable {
 				}
 			} else {
 				for (IRichSpout spout: spoutStreams.get(decl.getStream())) {
+					System.err.println("set here:"+router);
 					spout.setRouter(router);
 					spout.declareOutputFields(router);
 				}

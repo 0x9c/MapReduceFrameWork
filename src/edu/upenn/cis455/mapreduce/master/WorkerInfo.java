@@ -3,6 +3,11 @@ package edu.upenn.cis455.mapreduce.master;
 import java.util.Calendar;
 import java.util.List;
 
+/**
+ * Class to store progress information about worker
+ * @author dongtianxiang
+ *
+ */
 public class WorkerInfo {
 	private int port;
 	private String status;
