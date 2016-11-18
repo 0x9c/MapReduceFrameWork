@@ -53,7 +53,7 @@ public interface IRichSpout extends IStreamSource {
 	/**
 	 * Called when an ISpout is going to be shutdown. 
 	 * There is no guarantee that close will be called, because the 
-	 * supervisor kill -9’s worker processes on the cluster.
+	 * supervisor kill worker processes on the cluster.
 	 */
 	public void close();
 	
